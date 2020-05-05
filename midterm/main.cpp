@@ -52,7 +52,7 @@ const tflite::Model* model = tflite::GetModel(g_magic_wand_model_data);
 static tflite::MicroOpResolver<6> micro_op_resolver;
 
 // song data
-int index;
+int song_num;
 int step = 0;
 char name[3][20] = {"Little Star", "Lightly Row", "Two tigers"};
 int song[3][49] = {
@@ -125,14 +125,14 @@ void playNote(int freq)
 
 void forward(void)
 {
-    if (index < 2) index++;
-    else index = 0;
+    if (song_num < 2) song_num++;
+    else song_num = 0;
 }
 
 void back(void)
 {
-    if (index) index--;
-    else index = 2;
+    if (song_num) song_num--;
+    else song_num = 2;
 }
 
 void loadSignal(void)
@@ -141,7 +141,7 @@ void loadSignal(void)
   int i = 0;
   int serialCount = 0;
   //audio.spk.pause();
-  pc.printf("%d\n", index);
+  pc.printf("%d\n", song_num );
   while(i < signalLength)
   {
     if(pc.readable()) {
@@ -149,7 +149,7 @@ void loadSignal(void)
         serialCount++;
         if(serialCount == 3) {
             serialInBuffer[serialCount] = '\0';
-            song[i] = (float) atof(serialInBuffer);
+            song[song_num][i] = (float)atof(serialInBuffer);
             serialCount = 0;
             i++;
         }
@@ -163,7 +163,7 @@ void loadSignal(void)
         serialCount++;
         if(serialCount == 1) {
             serialInBuffer[serialCount] = '\0';
-            song[i] = (float) atof(serialInBuffer);
+            song[song_num][i] = (float)atof(serialInBuffer);
             serialCount = 0;
             i++;
         }
@@ -233,7 +233,7 @@ void checking(void)
   // Build an interpreter to run the model with
   static tflite::MicroInterpreter static_interpreter(
       model, micro_op_resolver, tensor_arena, kTensorArenaSize, error_reporter);
-  tflite::MicroInterpreter* interpreter = &static_interpreter;
+  tflite::MicroInterpreter *interpreter = &static_interpreter;
 
   // Allocate memory from the tensor_arena for the model's tensors
   interpreter->AllocateTensors();
@@ -241,13 +241,25 @@ void checking(void)
   // Obtain pointer to the model's input tensor
   TfLiteTensor* model_input = interpreter->input(0);
 
+  if ((model_input->dims->size != 4) || (model_input->dims->data[0] != 1) ||
+      (model_input->dims->data[1] != config.seq_length) ||
+      (model_input->dims->data[2] != kChannelNumber) ||
+      (model_input->type != kTfLiteFloat32)) {
+    //error_reporter->Report("Bad input tensor parameters in model");
+    return -1;
+  }
   int input_length = model_input->bytes / sizeof(float);
 
   TfLiteStatus setup_status = SetupAccelerometer(error_reporter);
 
+  if (setup_status != kTfLiteOk) {
+    //error_reporter->Report("Set up failed\n");
+    return -1;
+  }
+  //error_reporter->Report("Set up successful...\n");
 
-  TfLiteTensor* model_input1 = model_input;
-  tflite::MicroInterpreter* interpreter1 = interpreter;
+  TfLiteTensor *model_input1 = model_input;
+  tflite::MicroInterpreter *interpreter1 = interpreter;
   
   // Whether we should clear the buffer next time we fetch data
   bool should_clear_buffer = false;
@@ -263,7 +275,7 @@ void checking(void)
     if (!btn) break;
     else {
       // Attempt to read new data from the accelerometer
-      got_data = ReadAccelerometer(model_input1->data.f, input_length1, should_clear_buffer);
+      got_data = ReadAccelerometer(error_reporter, model_input1->data.f, input_length1, should_clear_buffer);
       // If there was no new data,
       // don't try to clear the buffer again and wait until next time
   	  if (!got_data) {
@@ -304,11 +316,11 @@ void playing(void)
       if (flag == true) {
         uLCD.cls();
         uLCD.printf("\nplaying\n");
-        uLCD.printf("\n%S\n", name[index]);
-        //uLCD.printf("\n%2D %S %2D\n", song[step], name[index], step);
-        int length = noteLength[index][step];
+        uLCD.printf("\n%s\n", name[song_num]);
+        //uLCD.printf("\n%2D %S %2D\n", song[step], name[song_num ], step);
+        int length = noteLength[song_num][step];
         while (length--){
-          queue2.call(playNote, song[index][step]);
+          queue2.call(playNote, song[song_num][step]);
           if (length <= 1) wait(1.0);
         }
       }
@@ -340,7 +352,7 @@ void mode_sel(void)
     if (mode == 0){
       uLCD.printf("\nbackward\n");
       back();
-      uLCD.printf("\nsong: %s", name[index]);
+      uLCD.printf("\nsong: %s", name[song_num]);
       step = 0;
       loadSignal();
       wait(1);
@@ -349,7 +361,7 @@ void mode_sel(void)
     if (mode == 1){
       uLCD.printf("\nforward\n");
       forward();
-      uLCD.printf("\nsong: %s", name[index]);
+      uLCD.printf("\nsong: %s", name[song_num]);
       step = 0;
       loadSignal();
       wait(1);
@@ -359,14 +371,14 @@ void mode_sel(void)
       uLCD.printf("\nselect song\n");
       while (true) {
         if (!btn) {
-          if (index < 2) index++;
-          else index = 0;
+          if (song_num < 2) song_num++;
+          else song_num = 0;
           uLCD.cls();
-          uLCD.printf("\nsong: %s", name[index]);
+          uLCD.printf("\nsong: %s", name[song_num]);
           wait(1);
         }
         else {
-          uLCD.printf("\nsong: %s", name[index]);
+          uLCD.printf("\nsong: %s", name[song_num]);
           step = 0;
           loadSignal();
           wait(1);
