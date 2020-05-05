@@ -19,7 +19,7 @@
 #include "DA7212.h"
 
 #define bufferLength (32)
-#define signalLength (1024)
+#define signalLength (49)
 
 DA7212 audio;
 int16_t waveform[kAudioTxBufferSize];
@@ -52,7 +52,7 @@ const tflite::Model* model = tflite::GetModel(g_magic_wand_model_data);
 static tflite::MicroOpResolver<6> micro_op_resolver;
 
 // song data
-int index = 0;
+int index;
 int step = 0;
 char name[3][20] = {"Little Star", "Lightly Row", "Two tigers"};
 int song[3][49] = {
@@ -83,7 +83,7 @@ int song[3][49] = {
      0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
      0, 0, 0, 0, 0, 0, 0
      }
-}
+};
 
 int noteLength[3][49] = {
     {1, 1, 1, 1, 1, 1, 2,
@@ -104,13 +104,13 @@ int noteLength[3][49] = {
     1, 1, 1, 1, 3 
     },
 
-    {1, 1, 1, 1, 1, 1, 1, 1
+    {1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1
     }
-}
+};
 
 void playNote(int freq)
 {
@@ -131,7 +131,7 @@ void forward(void)
 
 void back(void)
 {
-    if (index > 0) index--;
+    if (index) index--;
     else index = 2;
 }
 
@@ -149,7 +149,7 @@ void loadSignal(void)
         serialCount++;
         if(serialCount == 3) {
             serialInBuffer[serialCount] = '\0';
-            signal[i] = (float) atof(serialInBuffer);
+            song[i] = (float) atof(serialInBuffer);
             serialCount = 0;
             i++;
         }
@@ -163,7 +163,7 @@ void loadSignal(void)
         serialCount++;
         if(serialCount == 1) {
             serialInBuffer[serialCount] = '\0';
-            signal[i] = (float) atof(serialInBuffer);
+            song[i] = (float) atof(serialInBuffer);
             serialCount = 0;
             i++;
         }
@@ -214,7 +214,7 @@ int PredictGesture(float* output)
   return this_predict;
 }
 
-void Checking(void)
+void checking(void)
 {
   micro_op_resolver.AddBuiltin(
       tflite::BuiltinOperator_DEPTHWISE_CONV_2D,
@@ -268,7 +268,7 @@ void Checking(void)
       // don't try to clear the buffer again and wait until next time
   	  if (!got_data) {
         should_clear_buffer = false;
-     	  ontinue;
+     	  continue;
       }
      	// Run inference, and report any error
     	TfLiteStatus invoke_status = interpreter1->Invoke();
@@ -336,7 +336,7 @@ void mode_sel(void)
     red_led = 1;
     green_led = 1;
     led = 1;   
-    uLCD.cls():
+    uLCD.cls();
     if (mode == 0){
       uLCD.printf("\nbackward\n");
       back();
