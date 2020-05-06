@@ -10,14 +10,16 @@ song1 = np.array(
   392, 392, 349, 349, 330, 330, 294,
   392, 392, 349, 349, 330, 330, 294,
   261, 261, 392, 392, 440, 440, 392,
-  349, 349, 330, 330, 294, 294, 261])
+  349, 349, 330, 330, 294, 294, 261,
+  0, 0, 0, 0, 0, 0, 0,])
 length1 = np.array(
   [1, 1, 1, 1, 1, 1, 2,
   1, 1, 1, 1, 1, 1, 2,
   1, 1, 1, 1, 1, 1, 2,
   1, 1, 1, 1, 1, 1, 2,
   1, 1, 1, 1, 1, 1, 2,
-  1, 1, 1, 1, 1, 1, 2]
+  1, 1, 1, 1, 1, 1, 2,
+  ]
 )
 
 song2 = np.array(
@@ -45,9 +47,11 @@ song3 = np.array(
   330, 349, 392, 329, 349, 392,
   392, 440, 392, 349, 330, 261,
   392, 440, 392, 349, 330, 261,
-  293, 196, 261, 293, 196, 261])
+  293, 196, 261, 293, 196, 261,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0])
 length3 = np.array(
-  [1, 1, 1, 1, 1, 1, 1, 1
+  [1, 1, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1,
@@ -73,24 +77,26 @@ print("It may take about %d seconds ..." % (int(signalLength * waitTime)))
 
 if index == 0:
   for data in song0:
-  s.write(bytes(formatter(data), 'UTF-8'))
-  time.sleep(waitTime)
+    s.write(bytes(formatter(data), 'UTF-8'))
+    time.sleep(waitTime)
   for data in length0:
-  s.write(bytes(formatter(data), 'UTF-8'))
-  time.sleep(waitTime)
+    s.write(bytes(formatter(data), 'UTF-8'))
+    time.sleep(waitTime)
+
 if index == 1:
   for data in song1:
-  s.write(bytes(formatter(data), 'UTF-8'))
-  time.sleep(waitTime)
+    s.write(bytes(formatter(data), 'UTF-8'))
+    time.sleep(waitTime)
   for data in length1:
-  s.write(bytes(formatter(data), 'UTF-8'))
-  time.sleep(waitTime)
+    s.write(bytes(formatter(data), 'UTF-8'))
+    time.sleep(waitTime)
+
 if index == 2:
   for data in song2:
-  s.write(bytes(formatter(data), 'UTF-8'))
-  time.sleep(waitTime)
+    s.write(bytes(formatter(data), 'UTF-8'))
+    time.sleep(waitTime)
   for data in length2:
-  s.write(bytes(formatter(data), 'UTF-8'))
-  time.sleep(waitTime)
+    s.write(bytes(formatter(data), 'UTF-8'))
+    time.sleep(waitTime)
 s.close()
 print("Signal sended")

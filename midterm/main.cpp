@@ -55,17 +55,17 @@ static tflite::MicroOpResolver<6> micro_op_resolver;
 int song_num;
 int step = 0;
 char name[3][20] = {"Little Star", "Lightly Row", "Two tigers"};
-int song[3][49] = {
-    {261, 261, 392, 392, 440, 440, 392,
+int song[49] = {
+    261, 261, 392, 392, 440, 440, 392,
      349, 349, 330, 330, 294, 294, 261,
      392, 392, 349, 349, 330, 330, 294,
      392, 392, 349, 349, 330, 330, 294,
      261, 261, 392, 392, 440, 440, 392,
      349, 349, 330, 330, 294, 294, 261,
      0, 0, 0, 0, 0, 0, 0
-     },
+     
 
-     {392, 330, 330, 349, 294, 294,
+     /*{392, 330, 330, 349, 294, 294,
       262, 294, 330, 349, 392, 392, 392,
       392, 330, 330, 349, 294, 294,
       261, 330, 392, 392, 330,
@@ -82,19 +82,20 @@ int song[3][49] = {
      293, 196, 261, 293, 196, 261,
      0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
      0, 0, 0, 0, 0, 0, 0
-     }
+     }*/
 };
 
-int noteLength[3][49] = {
-    {1, 1, 1, 1, 1, 1, 2,
+int noteLength[49] = {
+    1, 1, 1, 1, 1, 1, 2,
      1, 1, 1, 1, 1, 1, 2,
      1, 1, 1, 1, 1, 1, 2,
      1, 1, 1, 1, 1, 1, 2,
      1, 1, 1, 1, 1, 1, 2,
-     1, 1, 1, 1, 1, 1, 2
-    },
+     1, 1, 1, 1, 1, 1, 2,
+     0,0,0,0,0,0,0
+    
 
-    {1, 1, 1, 1, 1, 1, 
+    /*{1, 1, 1, 1, 1, 1, 
     1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 3,
@@ -109,7 +110,7 @@ int noteLength[3][49] = {
     1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1
-    }
+    }*/
 };
 
 void playNote(int freq)
@@ -141,7 +142,7 @@ void loadSignal(void)
   int i = 0;
   int serialCount = 0;
   //audio.spk.pause();
-  pc.printf("%d\n", song_num );
+  pc.printf("%d\n", song_num);
   while(i < signalLength)
   {
     if(pc.readable()) {
@@ -149,7 +150,7 @@ void loadSignal(void)
         serialCount++;
         if(serialCount == 3) {
             serialInBuffer[serialCount] = '\0';
-            song[song_num][i] = (float)atof(serialInBuffer);
+            song[i] = (float)atof(serialInBuffer);
             serialCount = 0;
             i++;
         }
@@ -163,7 +164,7 @@ void loadSignal(void)
         serialCount++;
         if(serialCount == 1) {
             serialInBuffer[serialCount] = '\0';
-            song[song_num][i] = (float)atof(serialInBuffer);
+            song[i] = (float)atof(serialInBuffer);
             serialCount = 0;
             i++;
         }
@@ -276,6 +277,7 @@ void checking(void)
     else {
       // Attempt to read new data from the accelerometer
       got_data = ReadAccelerometer(error_reporter, model_input1->data.f, input_length1, should_clear_buffer);
+      //got_data = ReadAccelerometer(model_input1->data.f, input_length1, should_clear_buffer);
       // If there was no new data,
       // don't try to clear the buffer again and wait until next time
   	  if (!got_data) {
@@ -318,10 +320,10 @@ void playing(void)
         uLCD.printf("\nplaying\n");
         uLCD.printf("\n%s\n", name[song_num]);
         //uLCD.printf("\n%2D %S %2D\n", song[step], name[song_num ], step);
-        int length = noteLength[song_num][step];
+        int length = noteLength[step];
         while (length--){
-          queue2.call(playNote, song[song_num][step]);
-          if (length <= 1) wait(1.0);
+          queue2.call(playNote, song[step]);
+          if (length <= 1) wait(0.5);
         }
       }
       else {
@@ -341,6 +343,9 @@ void mode_sel(void)
   uLCD.cls();
   wait(1);
   uLCD.printf("\nMENU:\n");
+  uLCD.printf("\n backward\n");
+  uLCD.printf("\n forward\n");
+  uLCD.printf("\n change song\n");
 
   while (true) {
     wait(0.5);
