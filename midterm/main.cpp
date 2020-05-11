@@ -69,79 +69,9 @@ int gesture_index;
 int song_num = 0;
 int step = 0;
 char name[3][20] = {"Little Star", "Lightly Row", "Two tigers"};
-int song[3][49]; //= {
-    /*261, 261, 392, 392, 440, 440, 392,
-     349, 349, 330, 330, 294, 294, 261,
-     392, 392, 349, 349, 330, 330, 294,
-     392, 392, 349, 349, 330, 330, 294,
-     261, 261, 392, 392, 440, 440, 392,
-     349, 349, 330, 330, 294, 294, 261,
-     0, 0, 0, 0, 0, 0, 0
-     */
+int song[3][49]; 
+int noteLength[3][49];
 
-     /*{392, 330, 330, 349, 294, 294,
-      262, 294, 330, 349, 392, 392, 392,
-      392, 330, 330, 349, 294, 294,
-      261, 330, 392, 392, 330,
-      294, 294, 294, 294, 294, 330, 349,
-      330, 330, 330, 330, 330, 349, 392,
-      392, 330, 330, 349, 294, 294,
-      261, 330, 392, 392, 261
-     },
-
-     {261, 293, 330, 261, 261, 293, 330, 261, 
-     330, 349, 392, 329, 349, 392,
-     392, 440, 392, 349, 330, 261,
-     392, 440, 392, 349, 330, 261,
-     293, 196, 261, 293, 196, 261,
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-     0, 0, 0, 0, 0, 0, 0
-     }*/
-//};
-
-int noteLength[3][49];// = {
-    /*1, 1, 1, 1, 1, 1, 2,
-     1, 1, 1, 1, 1, 1, 2,
-     1, 1, 1, 1, 1, 1, 2,
-     1, 1, 1, 1, 1, 1, 2,
-     1, 1, 1, 1, 1, 1, 2,
-     1, 1, 1, 1, 1, 1, 2,
-     0,0,0,0,0,0,0
-    
-*/
-    /*{1, 1, 1, 1, 1, 1, 
-    1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 3,
-    1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 3 
-    },
-
-    {1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1
-    }*/
-//};
-
- // TfLiteTensor *model_input1 = model_input;
-  //tflite::MicroInterpreter *interpreter1 = interpreter;
-
-
-  //int input_length1 = input_length;
-
-
-  //while (true) {
-    //if (!btn) break;
-    //else {
-     
-
-      
-  //}
-//}
 void mode_sel(void);
 void choose(void);
 void get_gesture(void);
@@ -154,7 +84,7 @@ void loadSignal(void);
 
 void playing(void)
 {
-  while(true) {
+ // while(true) {
     for(step = 0; step < 49; step++) {
       //if (flag == true) {
         uLCD.cls();
@@ -163,9 +93,12 @@ void playing(void)
         //uLCD.printf("\n%2D %S %2D\n", song[step], name[song_num ], step);
         int length = noteLength[song_num][step];
         while (length--){
-          playNote(song[song_num][step]);
+          for(int j = 0; j < kAudioSampleFrequency / kAudioTxBufferSize; ++j) {
+            playNote(song[song_num][step]);
+            if (!num) num = beat();
+          }
           //queue2.call(playNote, song[song_num][step]);
-          if (length <= 1) wait(0.5);
+          //if (length <= 1) wait(0.5);
         }
         if (in_menu) break;
       //}
@@ -174,8 +107,8 @@ void playing(void)
       //}
     }
     //step = 0;
-    if (in_menu) break;
-  }
+    //if (in_menu) break;
+  //}
 }
 
   /*flag = false;
