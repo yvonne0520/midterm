@@ -44,6 +44,7 @@ DigitalOut led(LED3);
 int mode = 1;
 //bool flag = true;
 bool in_menu = false;
+bool game = false;
 
 constexpr int kTensorArenaSize = 60 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
@@ -71,6 +72,7 @@ int step = 0;
 char name[3][20] = {"Little Star", "Lightly Row", "Two tigers"};
 int song[3][49]; 
 int noteLength[3][49];
+int beat[49];
 
 void mode_sel(void);
 void choose(void);
@@ -86,86 +88,42 @@ void playing(void)
 {
  // while(true) {
     for(step = 0; step < 49; step++) {
-      //if (flag == true) {
+      uLCD.cls();
+      uLCD.printf("\nnow playing\n");
+      uLCD.printf("\n%s\n", name[song_num]);
+      int length = noteLength[song_num][step];
+      
+      if (game) {
         uLCD.cls();
-        uLCD.printf("\nnow playing\n");
-        uLCD.printf("\n%s\n", name[song_num]);
-        //uLCD.printf("\n%2D %S %2D\n", song[step], name[song_num ], step);
-        int length = noteLength[song_num][step];
-        while (length--){
-          for(int j = 0; j < kAudioSampleFrequency / kAudioTxBufferSize; ++j) {
-            playNote(song[song_num][step]);
-            if (!num) num = beat();
-          }
-          //queue2.call(playNote, song[song_num][step]);
-          //if (length <= 1) wait(0.5);
+        if (length == 1) uLCD.printf("\n1\n");
+        else if (length > 1) uLCD.printf("\n2"n);
+        beat[step] = beat();
+      }
+
+      while (length--){
+        for(int j = 0; j < kAudioSampleFrequency / kAudioTxBufferSize; ++j) {
+          playNote(song[song_num][step]);
         }
-        if (in_menu) break;
-      //}
-      //else {
-        //wait(1.0);
-      //}
+      }
+      if (in_menu) {
+        game = false;
+        break;
+      }
     }
-    //step = 0;
-    //if (in_menu) break;
+    if (game) {
+      for (int i = 0; i < 49; i++) {
+        if (beat[i] == noteLength[song_num][i]) {
+          if (beat[i] == 1) score++;
+          if (beat[i] > 1) score+=2;
+        }
+      }
+      uLCD.cls();
+      uLCD.printf("\nscore = %d\n", score*5);
+      game = false;
+    }
   //}
 }
 
-  /*flag = false;
-  red_led = 0;
-  green_led = 1;
-  led = 1;
-  uLCD.cls();
-  wait(1);
-  uLCD.printf("\nMENU:\n");
-
-  while (true) {
-    wait(0.5);
-    checking();
-    red_led = 1;
-    green_led = 1;
-    led = 1;   
-    uLCD.cls();
-    if (mode == 0){
-      uLCD.printf("\nbackward\n");
-      back();
-      uLCD.printf("\nsong: %s", name[song_num]);
-      step = 0;
-      loadSignal();
-      wait(1);
-      break;
-    } 
-    if (mode == 1){
-      uLCD.printf("\nforward\n");
-      forward();
-      uLCD.printf("\nsong: %s", name[song_num]);
-      step = 0;
-      loadSignal();
-      wait(1);
-      break;
-    } 
-    if (mode == 2){
-      uLCD.printf("\nselect song\n");
-      while (true) {
-        if (!btn) {
-          if (song_num < 2) song_num++;
-          else song_num = 0;
-          uLCD.cls();
-          uLCD.printf("\nsong: %s", name[song_num]);
-          wait(1);
-        }
-        else {
-          uLCD.printf("\nsong: %s", name[song_num]);
-          step = 0;
-          loadSignal();
-          wait(1);
-          break;
-        }
-      }
-    }
-  }
-}
-*/
 int main(void)
 {
     //pc.baud(9600);
@@ -302,6 +260,9 @@ int main(void)
           }
           else if (mode == 4) {
             uLCD.printf("\nTiako game\n");
+            game = true;
+            for (int i = 0; i < 49; i++)
+              beat[i] = 0;
             wait(1);
           }
         }  

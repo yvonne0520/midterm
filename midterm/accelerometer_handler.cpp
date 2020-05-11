@@ -1,4 +1,5 @@
 #include "accelerometer_handler.h"
+#include <cmath>
 #include "mbed.h"
 #include "fsl_port.h"
 #include "fsl_gpio.h"
@@ -123,4 +124,35 @@ bool ReadAccelerometer(tflite::ErrorReporter* error_reporter, float* input,
   }
 
   return true;
+}
+
+int beat()
+{
+  float x = 0.0, y = 0.0, z = 0.0;
+  float temp;
+
+  //while(sample_skip_counter <= sample_every_n) {
+    FXOS8700CQ_readRegs(FXOS8700Q_OUT_X_MSB, res, 6);
+
+    acc16 = (res[0] << 6) | (res[1] >> 2);
+    if (acc16 > UINT14_MAX/2)
+      acc16 -= UINT14_MAX;
+    x = ((float)acc16) / 4096.0f;
+
+    acc16 = (res[2] << 6) | (res[3] >> 2);
+    if (acc16 > UINT14_MAX/2)
+      acc16 -= UINT14_MAX;
+    y = ((float)acc16) / 4096.0f;
+
+    acc16 = (res[4] << 6) | (res[5] >> 2);
+    if (acc16 > UINT14_MAX/2)
+      acc16 -= UINT14_MAX;
+    z = ((float)acc16) / 4096.0f;
+
+ //   sample_skip_counter += 1;
+ // }
+    if (acos(z / (sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) * 180 / M_PI > 60)
+        return 2;	
+    else if (acos(z / (sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) * 180 / M_PI > 30)
+	return 1;
 }
