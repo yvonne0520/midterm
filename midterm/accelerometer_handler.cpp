@@ -126,7 +126,7 @@ bool ReadAccelerometer(tflite::ErrorReporter* error_reporter, float* input,
   return true;
 }
 
-int beat()
+int get_beat(void)
 {
   float x = 0.0, y = 0.0, z = 0.0;
   float temp;
@@ -151,8 +151,11 @@ int beat()
 
  //   sample_skip_counter += 1;
  // }
-    if (acos(z / (sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) * 180 / M_PI > 60)
+    temp = acos(z / (sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2)))) * 180 / M_PI;
+    if (temp > 60)
         return 2;	
-    else if (acos(z / (sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) * 180 / M_PI > 30)
+    else if (temp > 30)
 	return 1;
+    else
+        return 0;
 }

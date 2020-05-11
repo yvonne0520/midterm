@@ -87,30 +87,36 @@ void loadSignal(void);
 void playing(void)
 {
  // while(true) {
+    uLCD.cls();
+    uLCD.printf("\nnow playing\n");
+    uLCD.printf("\n%s\n", name[song_num]);
     for(step = 0; step < 49; step++) {
-      uLCD.cls();
-      uLCD.printf("\nnow playing\n");
-      uLCD.printf("\n%s\n", name[song_num]);
       int length = noteLength[song_num][step];
-      
       if (game) {
         uLCD.cls();
         if (length == 1) uLCD.printf("\n1\n");
-        else if (length > 1) uLCD.printf("\n2"n);
-        beat[step] = beat();
+        else if (length > 1) uLCD.printf("\n2\n");
       }
 
       while (length--){
         for(int j = 0; j < kAudioSampleFrequency / kAudioTxBufferSize; ++j) {
           playNote(song[song_num][step]);
+          if (game) {
+            beat[step] = get_beat();
+          }
+          //wait(0.5);
         }
+        //if (game) uLCD.printf("\nhit:%d\n", beat[step]);
       }
+      if (game) uLCD.printf("\nhit:%d\n", beat[step]);
+      wait(0.5);
       if (in_menu) {
         game = false;
         break;
       }
     }
     if (game) {
+      int score = 0;
       for (int i = 0; i < 49; i++) {
         if (beat[i] == noteLength[song_num][i]) {
           if (beat[i] == 1) score++;
@@ -119,6 +125,7 @@ void playing(void)
       }
       uLCD.cls();
       uLCD.printf("\nscore = %d\n", score*5);
+      wait(5);
       game = false;
     }
   //}
@@ -132,7 +139,7 @@ int main(void)
     led = 1;
 
     uLCD.printf("\nstart\n");
-    wait(1);
+    //wait(1);
     menu.rise(mode_sel);
     btn.rise(choose);
 
@@ -267,6 +274,7 @@ int main(void)
           }
         }  
         playing();
+        mode = -1;
       }
     
   }
@@ -377,8 +385,8 @@ void playNote(int freq)
     waveform[i] = (int16_t) (sin((double)i * 2. * M_PI/(double) (kAudioSampleFrequency / freq)) * ((1<<16) - 1));
   }
   // the loop below will play the note for the duration of 1s
-  //for(int j = 0; j < kAudioSampleFrequency / kAudioTxBufferSize; ++j) {
-  audio.spk.play(waveform, kAudioTxBufferSize);
+ // for(int j = 0; j < kAudioSampleFrequency / kAudioTxBufferSize; ++j) {
+    audio.spk.play(waveform, kAudioTxBufferSize);
   //}
 }
 
