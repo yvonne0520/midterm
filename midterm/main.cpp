@@ -86,49 +86,45 @@ void loadSignal(void);
 
 void playing(void)
 {
- // while(true) {
-    uLCD.cls();
-    uLCD.printf("\nnow playing\n");
-    uLCD.printf("\n%s\n", name[song_num]);
-    for(step = 0; step < 49; step++) {
-      int length = noteLength[song_num][step];
-      if (game) {
-        uLCD.cls();
-        if (length == 1) uLCD.printf("\n1\n");
-        else if (length > 1) uLCD.printf("\n2\n");
-      }
-
-      while (length--){
-        for(int j = 0; j < kAudioSampleFrequency / kAudioTxBufferSize; ++j) {
-          playNote(song[song_num][step]);
-          if (game) {
-            beat[step] = get_beat();
-          }
-          //wait(0.5);
-        }
-        //if (game) uLCD.printf("\nhit:%d\n", beat[step]);
-      }
-      if (game) uLCD.printf("\nhit:%d\n", beat[step]);
-      wait(0.5);
-      if (in_menu) {
-        game = false;
-        break;
-      }
-    }
+  uLCD.cls();
+  uLCD.printf("\nnow playing\n");
+  uLCD.printf("\n%s\n", name[song_num]);
+  for(step = 0; step < 49; step++) {
+    int length = noteLength[song_num][step];
     if (game) {
-      int score = 0;
-      for (int i = 0; i < 49; i++) {
-        if (beat[i] == noteLength[song_num][i]) {
-          if (beat[i] == 1) score++;
-          if (beat[i] > 1) score+=2;
+      uLCD.cls();
+      if (length == 1) uLCD.printf("\n1\n");
+      else if (length > 1) uLCD.printf("\n2\n");
+    }
+
+    while (length--){
+      for(int j = 0; j < kAudioSampleFrequency / kAudioTxBufferSize; ++j) {
+        playNote(song[song_num][step]);
+        if (game) {
+          beat[step] = get_beat();
         }
       }
-      uLCD.cls();
-      uLCD.printf("\nscore = %d\n", score*5);
-      wait(5);
-      game = false;
     }
-  //}
+    if (game) uLCD.printf("\nhit:%d\n", beat[step]);
+    wait(0.5);
+    if (in_menu) {
+      game = false;
+      break;
+    }
+  }
+  if (game) {
+    int score = 0;
+    for (int i = 0; i < 49; i++) {
+      if (beat[i] == noteLength[song_num][i]) {
+        if (beat[i] == 1) score++;
+        if (beat[i] > 1) score+=2;
+      }
+    }
+    uLCD.cls();
+    uLCD.printf("\nscore = %d\n", score*5);
+    wait(5);
+    game = false;
+  }
 }
 
 int main(void)
