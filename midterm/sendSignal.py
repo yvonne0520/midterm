@@ -60,8 +60,6 @@ length = np.array(
 )  
 # generate the waveform table
 signalLength = 49 * 3
-#t = np.linspace(0, 2*np.pi, signalLength)
-#signalTable = (np.sin(t) + 1.0) / 2.0 * ((1<<16) - 1)
 
 # output formatter
 formatter = lambda x: "%.3f" % x
@@ -70,9 +68,6 @@ formatter = lambda x: "%.3f" % x
 serdev = '/dev/ttyACM0'
 s = serial.Serial(serdev)
 print("Sending signal ...")
-#line = s.readline()
-#index = int(line)
-#print("index %d" % (int(index)))
 print("It may take about %d seconds ..." % (int(signalLength * waitTime * 2)))
 
 for data in song:

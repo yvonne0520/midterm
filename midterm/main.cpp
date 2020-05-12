@@ -28,11 +28,7 @@ char serialInBuffer[bufferLength];
 Serial pc(USBTX, USBRX);
 uLCD_4DGL uLCD(D1, D0, D2);
 
-//EventQueue queue1(32 * EVENTS_EVENT_SIZE);
 EventQueue queue2(32 * EVENTS_EVENT_SIZE);
-//Thread check(osPriorityNormal, 16 * 1024);
-//Thread music(osPriorityNormal, 16 * 1024);
-//Thread play(osPriorityNormal, 16 * 1024);
 
 // I/O
 InterruptIn menu(SW2);
@@ -42,7 +38,6 @@ DigitalOut green_led(LED2);
 DigitalOut led(LED3);
 
 int mode = 1;
-//bool flag = true;
 bool in_menu = false;
 bool game = false;
 
@@ -76,13 +71,147 @@ int beat[49];
 
 void mode_sel(void);
 void choose(void);
-void get_gesture(void);
+//void get_gesture(void);
 void forward(void);
 void back(void);
 void checking(void);
 int PredictGesture(float* output);
 void playNote(int freq);
 void loadSignal(void);
+
+
+
+int main(void)
+{
+    red_led = 1;
+    green_led = 1;
+    led = 1;
+
+    uLCD.printf("\nstart\n");
+    menu.rise(mode_sel);
+    btn.rise(choose);
+
+    uLCD.printf("loading song");
+    loadSignal();
+    checking();
+
+    while (true) {
+      if (in_menu) {
+        playNote(0);
+        if (mode == -1) {
+          uLCD.cls();
+          uLCD.printf("\nMENU:\n");
+            uLCD.printf("\n 1. forward\n");
+            uLCD.printf("\n 2. select_song\n");
+            uLCD.printf("\n 3. backword\n");
+            uLCD.printf("\n 4. Tiako game\n");
+          mode++;
+        }
+        // Attempt to read new data from the accelerometer
+        got_data = ReadAccelerometer(error_reporter, model_input->data.f, input_length, should_clear_buffer);
+        // If there was no new data,
+        // don't try to clear the buffer again and wait until next time
+        if (!got_data) {
+          should_clear_buffer = false;
+          continue;
+        }
+        // Run inference, and report any error
+        TfLiteStatus invoke_status = interpreter->Invoke();
+        if (invoke_status != kTfLiteOk) {
+          error_reporter->Report("Invoke failed on index: %d\n", begin_index);
+          continue;
+        }
+        // Analyze the results to obtain a prediction
+        gesture_index = PredictGesture(interpreter->output(0)->data.f);
+
+        // Clear the buffer next time we read data
+        should_clear_buffer = gesture_index < label_num;
+        if (gesture_index == 1) {
+          if (mode < 4) mode++;
+          else mode = 1;
+          
+          if (mode == 1) {
+            uLCD.cls();
+            uLCD.printf("\n1. forward\n");
+          }
+          if (mode == 2) {
+            uLCD.cls();
+            uLCD.printf("\n2. select song\n");
+          }
+          if (mode == 3) {
+            uLCD.cls();
+            uLCD.printf("\n3. backward\n");
+          }
+          if (mode == 4) {
+            uLCD.cls();
+            uLCD.printf("\n4. Tiako game\n");
+          }    	
+        }
+      }	
+      else if (mode == 5) {
+        playNote(0);
+        uLCD.cls();
+        for (int i = 0; i < 3; i++) {
+          uLCD.printf("No.%d: %s\n", i+1, name[i]);
+        }
+
+        while (mode == 5) {
+          // Attempt to read new data from the accelerometer
+          got_data = ReadAccelerometer(error_reporter, model_input->data.f, input_length, should_clear_buffer);
+          // If there was no new data,
+          // don't try to clear the buffer again and wait until next time
+          if (!got_data) {
+            should_clear_buffer = false;
+            continue;
+          }
+          // Run inference, and report any error
+          TfLiteStatus invoke_status = interpreter->Invoke();
+          if (invoke_status != kTfLiteOk) {
+            error_reporter->Report("Invoke failed on index: %d\n", begin_index);
+            continue;
+          }
+          // Analyze the results to obtain a prediction
+          gesture_index = PredictGesture(interpreter->output(0)->data.f);
+
+          // Clear the buffer next time we read data
+          should_clear_buffer = gesture_index < label_num;
+        
+          if (gesture_index == 1){
+            if (song_num < 2) song_num++;
+            else song_num = 0;
+            uLCD.cls();
+            uLCD.printf("No.%d: %s\n", song_num+1, name[song_num]);
+          }
+        }
+      }
+      else {
+        if (mode != -1){
+          uLCD.cls();
+          if (mode == 1) {
+            uLCD.printf("\nforward\n");
+            forward();
+            uLCD.printf("No.%d: %s\n", song_num+1, name[song_num]);
+            wait(1);
+          }
+          else if (mode == 3) {
+            uLCD.printf("\nbackward\n");
+            back();
+            uLCD.printf("No.%d: %s\n", song_num+1, name[song_num]);
+            wait(1);
+          }
+          else if (mode == 4) {
+            uLCD.printf("\nTiako game\n");
+            game = true;
+            for (int i = 0; i < 49; i++)
+              beat[i] = 0;
+            wait(1);
+          }
+        }  
+        playing();
+        mode = -1;
+      }   
+  }
+}
 
 void playing(void)
 {
@@ -127,160 +256,6 @@ void playing(void)
   }
 }
 
-int main(void)
-{
-    //pc.baud(9600);
-    red_led = 1;
-    green_led = 1;
-    led = 1;
-
-    uLCD.printf("\nstart\n");
-    //wait(1);
-    menu.rise(mode_sel);
-    btn.rise(choose);
-
-    uLCD.printf("loading song");
-    loadSignal();
-    
-    checking();
-
-    while (true) {
-      if (in_menu) {
-        playNote(0);
-        if (mode == -1) {
-          uLCD.cls();
-          uLCD.printf("\nMENU:\n");
-            uLCD.printf("\n 1. forward\n");
-            uLCD.printf("\n 2. select_song\n");
-            uLCD.printf("\n 3. backword\n");
-            uLCD.printf("\n 4. Tiako game\n");
-          mode++;
-        }
-        //uLCD.printf("\nmode = %d\n", mode);
-        //get_gesture();
-          // Attempt to read new data from the accelerometer
-        got_data = ReadAccelerometer(error_reporter, model_input->data.f, input_length, should_clear_buffer);
-        // If there was no new data,
-        // don't try to clear the buffer again and wait until next time
-        if (!got_data) {
-          should_clear_buffer = false;
-          continue;
-        }
-        // Run inference, and report any error
-        TfLiteStatus invoke_status = interpreter->Invoke();
-        if (invoke_status != kTfLiteOk) {
-          error_reporter->Report("Invoke failed on index: %d\n", begin_index);
-          continue;
-        }
-        // Analyze the results to obtain a prediction
-        gesture_index = PredictGesture(interpreter->output(0)->data.f);
-
-        // Clear the buffer next time we read data
-        should_clear_buffer = gesture_index < label_num;
-        //uLCD.printf("\ngesture = %d\n", gesture_index);
-        if (gesture_index == 1) {
-          if (mode < 4) mode++;
-          else mode = 1;
-          
-          if (mode == 1) {
-            uLCD.cls();
-            uLCD.printf("\n1. forward\n");
-          }
-          if (mode == 2) {
-            uLCD.cls();
-            uLCD.printf("\n2. select song\n");
-          }
-          if (mode == 3) {
-            uLCD.cls();
-            uLCD.printf("\n3. backward\n");
-          }
-          if (mode == 4) {
-            uLCD.cls();
-            uLCD.printf("\n4. Tiako game\n");
-          }    	
-        }
-      }	
-      else if (mode == 5) {
-        playNote(0);
-        uLCD.cls();
-        for (int i = 0; i < 3; i++) {
-          uLCD.printf("No.%d: %s\n", i+1, name[i]);
-        }
-
-        while (mode == 5) {
-         // get_gesture();
-                    // Attempt to read new data from the accelerometer
-          got_data = ReadAccelerometer(error_reporter, model_input->data.f, input_length, should_clear_buffer);
-          // If there was no new data,
-          // don't try to clear the buffer again and wait until next time
-          if (!got_data) {
-            should_clear_buffer = false;
-            continue;
-          }
-          // Run inference, and report any error
-          TfLiteStatus invoke_status = interpreter->Invoke();
-          if (invoke_status != kTfLiteOk) {
-            error_reporter->Report("Invoke failed on index: %d\n", begin_index);
-            continue;
-          }
-            // Analyze the results to obtain a prediction
-          gesture_index = PredictGesture(interpreter->output(0)->data.f);
-
-            // Clear the buffer next time we read data
-          should_clear_buffer = gesture_index < label_num;
-        
-          if (gesture_index == 1){
-            if (song_num < 2) song_num++;
-            else song_num = 0;
-            uLCD.cls();
-            uLCD.printf("No.%d: %s\n", song_num+1, name[song_num]);
-              /*if (song_num == 0) {
-              uLCD.printf("\nNo. 1\n");
-            }
-            if (song_num == 1) {
-              uLCD.printf("\nNo. 2\n");
-            }
-            if (song_num == 2) {
-              uLCD.printf("\nNo. 3\n");
-            }  */
-          }
-        }
-      }
-      else {
-        if (mode != -1){
-          uLCD.cls();
-          if (mode == 1) {
-            uLCD.printf("\nforward\n");
-            forward();
-            uLCD.printf("No.%d: %s\n", song_num+1, name[song_num]);
-            wait(1);
-          }
-          else if (mode == 3) {
-            uLCD.printf("\nbackward\n");
-            back();
-            uLCD.printf("No.%d: %s\n", song_num+1, name[song_num]);
-            wait(1);
-          }
-          else if (mode == 4) {
-            uLCD.printf("\nTiako game\n");
-            game = true;
-            for (int i = 0; i < 49; i++)
-              beat[i] = 0;
-            wait(1);
-          }
-        }  
-        playing();
-        mode = -1;
-      }
-    
-  }
-
-  //check.start(callback(&queue1, &EventQueue::dispatch_forever));
-  //menu.fall(queue1.event(mode_sel));
-  //play.start(callback(&queue2, &EventQueue::dispatch_forever));
-  //music.start(playing);
-}
-
 void mode_sel(void)
 {
   mode = -1;
@@ -306,7 +281,7 @@ void back(void)
     else song_num = 2;
 }
 
-void get_gesture(void)
+/*void get_gesture(void)
 {
   // Attempt to read new data from the accelerometer
   got_data = ReadAccelerometer(error_reporter, model_input->data.f, input_length, should_clear_buffer);
@@ -328,7 +303,7 @@ void get_gesture(void)
   // Clear the buffer next time we read data
   should_clear_buffer = gesture_index < label_num;
 }
-
+*/
 void checking(void)
 {
   micro_op_resolver.AddBuiltin(
