@@ -78,7 +78,7 @@ void checking(void);
 int PredictGesture(float* output);
 void playNote(int freq);
 void loadSignal(void);
-
+void playing(void);
 
 
 int main(void)
@@ -234,8 +234,10 @@ void playing(void)
         }
       }
     }
-    if (game) uLCD.printf("\nhit:%d\n", beat[step]);
-    wait(0.5);
+    if (game) {
+      uLCD.printf("\nhit:%d\n", beat[step]);
+      wait(0.5);
+    }
     if (in_menu) {
       game = false;
       break;
